@@ -2,15 +2,16 @@ const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
 const playerScoreElement = document.getElementById('playerScore');
 const computerScoreElement = document.getElementById('computerScore');
+const gameStatusElement = document.getElementById('gameStatus');
 const startButton = document.getElementById('startButton');
 const pauseButton = document.getElementById('pauseButton');
 
+const WINNING_SCORE = 3;
 const paddle = { width: 14, height: 96, inset: 24, speed: 7 };
 const ball = { radius: 9, speed: 5.5, maxSpeed: 12 };
 const player = { x: paddle.inset, y: canvas.height / 2 - paddle.height / 2, score: 0 };
 const computer = { x: canvas.width - paddle.inset - paddle.width, y: player.y, score: 0 };
 
-let animationId;
 let lastTime = 0;
 let running = false;
 let paused = false;
@@ -19,7 +20,7 @@ let downPressed = false;
 let ballState;
 
 function resetBall(direction = Math.random() < 0.5 ? -1 : 1) {
-  const angle = (Math.random() * 0.8 - 0.4);
+  const angle = Math.random() * 0.8 - 0.4;
   ballState = {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -34,6 +35,7 @@ function resetGame() {
   playerScoreElement.textContent = '0';
   computerScoreElement.textContent = '0';
   player.y = computer.y = canvas.height / 2 - paddle.height / 2;
+  gameStatusElement.textContent = `First to ${WINNING_SCORE} points wins.`;
   resetBall();
 }
 
@@ -48,10 +50,10 @@ function movePlayer() {
 }
 
 function moveComputer() {
-  // The computer tracks the ball with a small reaction limit so it remains beatable.
+  // A slower reaction speed keeps the computer beatable.
   const target = ballState.y - paddle.height / 2;
   const difference = target - computer.y;
-  computer.y += Math.max(-4.4, Math.min(4.4, difference));
+  computer.y += Math.max(-3, Math.min(3, difference));
   clampPaddle(computer);
 }
 
@@ -69,6 +71,15 @@ function bounceFromPaddle(paddleObject, direction) {
   ballState.velocityX = direction * newSpeed * Math.cos(angle);
   ballState.velocityY = newSpeed * Math.sin(angle);
   ballState.x = direction > 0 ? paddleObject.x + paddle.width + ball.radius : paddleObject.x - ball.radius;
+}
+
+function finishGame(winner) {
+  running = false;
+  paused = false;
+  pauseButton.disabled = true;
+  startButton.disabled = false;
+  startButton.textContent = 'Play Again';
+  gameStatusElement.textContent = `${winner} wins! First to ${WINNING_SCORE} points.`;
 }
 
 function update(delta) {
@@ -89,11 +100,19 @@ function update(delta) {
   if (ballState.x < -ball.radius) {
     computer.score++;
     computerScoreElement.textContent = computer.score;
-    resetBall(-1);
+    if (computer.score >= WINNING_SCORE) {
+      finishGame('Computer');
+    } else {
+      resetBall(-1);
+    }
   } else if (ballState.x > canvas.width + ball.radius) {
     player.score++;
     playerScoreElement.textContent = player.score;
-    resetBall(1);
+    if (player.score >= WINNING_SCORE) {
+      finishGame('Player');
+    } else {
+      resetBall(1);
+    }
   }
 }
 
@@ -131,7 +150,7 @@ function frame(timestamp) {
     draw();
   }
   lastTime = timestamp;
-  animationId = requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 }
 
 function startGame() {
@@ -143,13 +162,14 @@ function startGame() {
   pauseButton.disabled = false;
   pauseButton.textContent = 'Pause';
   lastTime = performance.now();
-  animationId = requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 }
 
 function togglePause() {
   if (!running) return;
   paused = !paused;
   pauseButton.textContent = paused ? 'Resume' : 'Pause';
+  gameStatusElement.textContent = paused ? 'Game paused.' : `First to ${WINNING_SCORE} points wins.`;
 }
 
 function setPlayerPosition(event) {
