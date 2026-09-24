@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pong</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="game-header">
+      <h1>Pong</h1>
+      <div class="scoreboard" aria-label="Scoreboard">
+        <span>Player <strong id="playerScore">0</strong></span>
+        <span class="divider">:</span>
+        <span><strong id="computerScore">0</strong> Computer</span>
+      </div>
+    </header>
+
+    <canvas id="gameCanvas" width="900" height="500" aria-label="Pong game"></canvas>
+
+    <section class="controls" aria-label="Game controls">
+      <p>Move with your mouse or <kbd>↑</kbd> <kbd>↓</kbd> keys.</p>
+      <button id="startButton" type="button">Start Game</button>
+      <button id="pauseButton" type="button" disabled>Pause</button>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
